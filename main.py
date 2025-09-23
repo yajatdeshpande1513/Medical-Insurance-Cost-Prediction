@@ -2,45 +2,57 @@ import numpy as np
 import pickle
 import streamlit as st
 
-# loading the saved model
+# Load the model
 loaded_model = pickle.load(open('Medical-Insurance-Cost-Prediction.sav', 'rb'))
 
-#creating a function for Prediction
 def medical_insurance_cost_prediction(input_data):
-    # changing the input_data to numpy array
-    input_data_as_numpy_array = np.asarray(input_data)
-
-    # reshape the array as we are predicting for one instance
-    input_data_reshaped = input_data_as_numpy_array.reshape(1,-1)
-
+    input_data_as_numpy_array = np.asarray(input_data).astype(float)
+    input_data_reshaped = input_data_as_numpy_array.reshape(1, -1)
     prediction = loaded_model.predict(input_data_reshaped)
-    print(prediction)
+    return prediction[0]
 
-    return prediction
+# Custom CSS for styling
+st.markdown("""
+    <style>
+    .main {background-color: #f9f9f9;}
+    .big-font {font-size:28px !important; font-weight:600; color:#2C3E50;}
+    .result-card {
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 def main():
-    
-    #giving a title
-    st.title('Medical Insurance Cost Prediction')
-    
-    #getting input from the user
-    
-    age = st.text_input('Age')
-    sex = st.text_input('Sex: 0 -> Female, 1 -> Male')
-    bmi = st.text_input('Body Mass Index')
-    children = st.text_input('Number of Children')
-    smoker = st.text_input('Smoker: 0 -> No, 1 -> Yes')
-    region = st.text_input('Region of Living: 0 -> NorthEast, 1-> NorthWest, 2-> SouthEast, 3-> SouthWest')
-    
-    #code for prediction
-    diagnosis = ''
-    
-    # getting the input data from the user
-    if st.button('Predicted Medical Insurance Cost: '):
-        diagnosis = medical_insurance_cost_prediction([age,sex,bmi,children,smoker,region])
-        
-    st.success(diagnosis)
-    
+    st.markdown("<p class='big-font'>🔮 Medical Insurance Cost Prediction</p>", unsafe_allow_html=True)
+    st.write("Enter your details below to estimate your insurance cost using a trained Machine Learning model.")
 
-if __name__ == '__main__':
-    main()
+    # Sidebar
+    st.sidebar.header("ℹ️ About this Project")
+    st.sidebar.write("""
+    This app predicts medical insurance costs based on user profile inputs 
+    like **age, BMI, smoking habits, and region**.  
+    Built with **Python, ML & Streamlit**.
+    """)
+
+    # Input fields
+    age = st.slider("👤 Age", 18, 100, 30)
+    sex = st.radio("⚧ Sex", ["Female", "Male"])
+    bmi = st.slider("⚖️ Body Mass Index", 10.0, 50.0, 22.5)
+    children = st.slider("👶 Number of Children", 0, 5, 0)
+    smoker = st.radio("🚬 Smoker", ["No", "Yes"])
+    region = st.selectbox("🌍 Region", ["NorthEast", "NorthWest", "SouthEast", "SouthWest"])
+
+    # Convert categorical inputs
+    sex_val = 1 if sex == "Male" else 0
+    smoker_val = 1 if smoker == "Yes" else 0
+    region_map = {"NorthEast": 0, "NorthWest": 1, "SouthEast": 2, "SouthWest": 3}
+    region_val = region_map[region]
+
+    # Prediction button
+    if st.button("🚀 Predict Now"):
+        with st.spinner("Calculating..."):
+            result = medical_insurance_cost_prediction([age, sex_val, bmi, children, smoker_val, region_val])
